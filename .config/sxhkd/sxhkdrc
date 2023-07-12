@@ -44,8 +44,8 @@ super + t
 super + {_,shift} + b
     GDK_DPI_SCALE=1.1 firefox {_,--private-window}
 
-#super + c
-#    kcalc
+super + n
+    obsidian
 
 super + d
     discord
@@ -58,6 +58,10 @@ super + s
 
 alt + space
 	killall rofi || rofi -show drun
+
+~button3
+    bspc query -D -d 'focused.!occupied' \
+        && (killall rofi || rofi -show drun)
 
 ctrl + Pause
     pkill -USR1 '^redshift$'
@@ -73,6 +77,7 @@ shift + Print
 
 ctrl + shift + Print
     flameshot full
+
 
 # make sxhkd reload its configuration files:
 super + shift + Escape
@@ -135,8 +140,8 @@ super + bracket{left,right}
 	bspc desktop -f {prev,next}.local
 
 # focus the last node/desktop
-super + {grave,Tab}
-	bspc {node,desktop} -f last
+super + Tab
+	bspc node -f last
 
 # focus the older or newer node in the focus history
 super + {o,i}
@@ -148,6 +153,7 @@ super + {o,i}
 super + {_,shift + }{1-9,0}
 	bspc {desktop -f,node -d} '^{1-9,10}' --follow
 
+# send to the given desktop and don't focus
 super + ctrl + {1-9,0}
 	bspc node -d '^{1-9,10}'
 
@@ -193,3 +199,34 @@ super + alt + {h,j,k,l}
 	bspc node @parent/second -z top 0 -20, \
 	bspc node @parent/first -z right +20 0; \
 	bspc node @parent/second -z left +20 0}
+
+#
+# scratchpad
+#
+super + shift + grave
+	id=$(bspc query -N -n "focused");\
+	if [ -n "$id" ];then \
+		xprop -id $id -f _SCRATCH 32ii -set _SCRATCH $(date +%s,%N);\
+		bspc node -t "floating";\
+		xdotool windowunmap $id;\
+	fi
+
+super + grave
+	i=$(bspc query -N -n "focused.floating");\
+	if [ -n "$i" ];then \
+		xprop -id $i -f _SCRATCH 32ii -set _SCRATCH $(date +%s,%N);\
+		xdotool windowunmap $i;\
+	else;\
+		i=$(for w in $(xwininfo -root -children | grep -e "^\s*0x[0-9a-f]\+" -o);do \
+			t=$(xprop -id $w _SCRATCH | grep ' = \(.*\)');\
+			if [ -n "$t" ];then \
+				echo $t $w;\
+			fi;\
+		done|sort -n|head -n1|cut -d" " -f 5);\
+		if [ -n "$i" ];then \
+			xprop -id $i -remove _SCRATCH;\
+			bspc rule -a \* state=floating center=on --one-shot;\
+			xdotool windowmap $i;\
+			bspc node -f $i;\
+		fi;\
+	fi

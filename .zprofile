@@ -10,7 +10,7 @@ export PATH=$PATH:$GOPATH/bin
 #command -v pyenv >/dev/null || export PATH="$PYENV_ROOT/bin:$PATH"
 #eval "$(pyenv init -)"
 
-#pulseeffects -l "AClean"
+pulseeffects -l "AClean"
 
 export MOZ_DISABLE_RDD_SANDBOX=1
 export LIBVA_DRIVER_NAME=nvidia
